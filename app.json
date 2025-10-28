@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "name": "journal-pet",
+    "slug": "journal-pet",
+    "scheme": "journalpet",
+    "version": "1.0.0",
+    "sdkVersion": "51.0.0",
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
+    "android": {
+      "package": "com.anonymous.journalpet"
+    }
+  }
+}
