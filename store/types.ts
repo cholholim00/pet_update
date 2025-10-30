@@ -1,17 +1,19 @@
-export type Currency = 'seed' | 'coral' | 'stardust';
+// store/types.ts
+
+export type PetMood = 'calm' | 'happy' | 'sleepy' | 'excited';
 
 export interface Pet {
   id: string;
   name: string;
   level: number; // 1..20
-  xp: number;    // 0..100 → level up
+  xp: number;    // 0..99 (100되면 레벨업)
   bond: number;  // 0..5
-  mood: 'calm'|'curious'|'sleepy'|'excited'|'tense';
+  mood: PetMood;
 }
 
 export interface Rewards {
-  xp: number;
-  currency: Partial<Record<Currency, number>>;
+  xp: number;                    // 부여 XP
+  currency?: Record<string, number>;
 }
 
 export interface JournalEntry {
@@ -21,7 +23,7 @@ export interface JournalEntry {
   mood: number; // 0..100
   prompts: string[];
   textLen: number;
-  text?: string;           // ✅ 본문 저장
+  text?: string;
   keywords: string[];
   sentiment: { pos:number; neg:number; energy:number };
   rewards: Rewards;

@@ -3,13 +3,14 @@ import { JournalEntry } from '../store/types';
 
 const KEY_DATES = 'journal_dates';
 
-export async function saveJournalEntry(e: JournalEntry){
+export async function saveJournalEntry(e: JournalEntry) {
   await AsyncStorage.setItem(`journal_${e.date}`, JSON.stringify(e));
-  const raw = await AsyncStorage.getItem(KEY_DATES);
+  const raw = await AsyncStorage.getItem('journal_dates');
   const arr = raw ? (JSON.parse(raw) as string[]) : [];
-  const next = Array.from(new Set([...arr, e.date]));
-  await AsyncStorage.setItem(KEY_DATES, JSON.stringify(next));
+  const next = Array.from(new Set([...arr, e.date])); // 중복 방지
+  await AsyncStorage.setItem('journal_dates', JSON.stringify(next));
 }
+
 
 export async function loadDates(){
   const raw = await AsyncStorage.getItem(KEY_DATES);

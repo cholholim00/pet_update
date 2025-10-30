@@ -2,74 +2,108 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Pet, Rewards, JournalEntry } from './types';
-// (선택) Haptics
-// import * as Haptics from 'expo-haptics';
 
-interface PetState {
-  pet: Pet | null;
-  mood: number;
+const PET_KEY = 'pet';
+const DATES_KEY = 'journal_dates';
+const LAST_ENTRY_KEY = 'last_entry';
+
+const initialPet: Pet = {
+  id: 'p1',
+  name: '루미',
+  level: 1,
+  xp: 0,
+  bond: 0,
+  mood: 'calm',
+};
+
+type PetState = {
+  pet: Pet;                    // 항상 존재하도록 보장
+  mood: number;                // 일기 작성용 0..100
+  dates: string[];             // 'YYYY-MM-DD' 목록
+  streak: number;              // 현재 연속일수
   lastEntry?: JournalEntry;
-  dates: string[];
-  streak: number;
-  justLeveled: boolean;          // ✅ 추가
+
+  justLeveled: boolean;
+
+  // getters/selectors
+  petXp: () => number;
+  petLevel: () => number;
+
+  // actions
   setMood: (n:number)=>void;
   setDates: (d:string[])=>void;
   setLastEntry: (e:JournalEntry)=>void;
   applyRewards: (r:Rewards)=>void;
-  ackLevelUp: ()=>void;          // ✅ 추가
-   /** ✅ 앱 시작 시 저장된 pet/dates 복구 */
+  ackLevelUp: ()=>void;
   rehydrate: ()=>Promise<void>;
-}
+};
 
-const PET_KEY = 'pet';
-const DATES_KEY = 'journal_dates';
-
-export const usePetStore = create<PetState>((set,get)=>({
-  pet: { id:'p1', name:'루미', level:1, xp:0, bond:0, mood:'calm' },
+export const usePetStore = create<PetState>((set, get) => ({
+  pet: initialPet,
   mood: 50,
   dates: [],
   streak: 0,
-  justLeveled: false,            // ✅ 초기값
+  lastEntry: undefined,
+  justLeveled: false,
 
-  setMood: (n)=> set({ mood: n }),
-  setDates: (d)=> set({ dates:d, streak: calcStreakLocal(d) }),
-  setLastEntry: (e)=> set({ lastEntry: e }),
-  ackLevelUp: ()=> set({ justLeveled: false }),  // ✅ 리셋
+  // selectors
+  petXp: () => get().pet.xp,
+  petLevel: () => get().pet.level,
 
-  applyRewards: (r)=> set(s=>{
-    let pet = s.pet ?? { id:'p1', name:'루미', level:1, xp:0, bond:0, mood:'calm' };
-    const beforeLevel = pet.level;               // ✅ 이전 레벨 보관
-    let xp = pet.xp + (r?.xp ?? 0);
-    let level = pet.level;
-    while (xp >= 100 && level < 20) { xp -= 100; level += 1; }
-    const bond = Math.min(5, pet.bond + ((r?.xp ?? 0) >= 30 ? 1 : 0));
-    const newPet = { ...pet, xp, level, bond };
-    const justLeveled = level > beforeLevel;     // ✅ 레벨업 감지
-    // if (justLeveled) { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(()=>{}); }
-    AsyncStorage.setItem('pet', JSON.stringify(newPet)).catch(()=>{});
-    return { pet: newPet, justLeveled };         // ✅ 플래그 반영
+  setMood: (n) => set({ mood: Math.max(0, Math.min(100, n)) }),
+
+  setDates: (d) => set({
+    dates: d,
+    streak: calcStreakFromDates(d),
   }),
 
-  rehydrate: async ()=>{
+  setLastEntry: (e) => {
+    set({ lastEntry: e });
+    AsyncStorage.setItem(LAST_ENTRY_KEY, JSON.stringify(e)).catch(()=>{});
+  },
+
+  applyRewards: (r) => set((s) => {
+    const addXp = Math.max(0, r?.xp ?? 0);
+    let { xp, level, bond } = s.pet;
+
+    const beforeLevel = level;
+    xp += addXp;
+    while (xp >= 100 && level < 20) { xp -= 100; level += 1; }
+    bond = Math.min(5, bond + (addXp >= 30 ? 1 : 0));
+
+    const nextPet = { ...s.pet, xp, level, bond };
+    AsyncStorage.setItem(PET_KEY, JSON.stringify(nextPet)).catch(()=>{});
+
+    return {
+      pet: nextPet,
+      justLeveled: level > beforeLevel,
+    };
+  }),
+
+  ackLevelUp: () => set({ justLeveled: false }),
+
+  rehydrate: async () => {
     try {
-      const [praw, draw] = await Promise.all([
+      const [pRaw, dRaw, lRaw] = await Promise.all([
         AsyncStorage.getItem(PET_KEY),
         AsyncStorage.getItem(DATES_KEY),
+        AsyncStorage.getItem(LAST_ENTRY_KEY),
       ]);
-      if (praw) set({ pet: JSON.parse(praw) as Pet });
-      if (draw) {
-        const dates = JSON.parse(draw) as string[];
-        set({ dates, streak: calcStreakLocal(dates) });
+      if (pRaw) set({ pet: JSON.parse(pRaw) as Pet });
+      if (dRaw) {
+        const dates = JSON.parse(dRaw) as string[];
+        set({ dates, streak: calcStreakFromDates(dates) });
       }
+      if (lRaw) set({ lastEntry: JSON.parse(lRaw) as JournalEntry });
     } catch {}
   },
 }));
 
-function calcStreakLocal(dates: string[]): number {
+function calcStreakFromDates(dates: string[]): number {
+  const iso = (d: Date) => d.toISOString().slice(0,10);
   const set = new Set(dates);
-  let streak = 0;
-  let d = new Date();
-  const iso = (x:Date)=> x.toISOString().slice(0,10);
-  while (set.has(iso(d))) { streak++; d.setDate(d.getDate()-1); }
-  return streak;
+  let d = new Date(); d.setHours(0,0,0,0);
+  let c = 0;
+  while (set.has(iso(d))) { c += 1; d.setDate(d.getDate() - 1); }
+  return c;
 }

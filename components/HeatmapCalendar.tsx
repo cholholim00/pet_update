@@ -1,18 +1,20 @@
 // components/HeatmapCalendar.tsx
 import React, { useMemo } from 'react';
-import { View, Text, ScrollView } from 'react-native';
+import { View, Text, ScrollView, Pressable } from 'react-native';
 
 type Level = 0 | 1 | 2 | 3 | 4;
 type Props = {
-  levels: Record<string, Level>; // 'YYYY-MM-DD' -> 0..4
-  weeks?: number;                // 표시 주 수(기본 12)
-  startOnSunday?: boolean;       // 일요일 시작 여부
-  currentStreak?: number;        // 현재 연속 작성 일수
-  bestStreak?: number;           // 최장 연속 작성 일수
+  levels: Record<string, Level>;        // YYYY-MM-DD -> 0..4
+  weeks?: number;                       // default 12
+  startOnSunday?: boolean;              // default true
+  currentStreak?: number;
+  bestStreak?: number;
+  onPressDate?: (iso: string) => void;  // ✅ 셀 탭 콜백
 };
 
 function toISO(d: Date) { return d.toISOString().slice(0,10); }
 function addDays(d: Date, n: number) { const x = new Date(d); x.setDate(x.getDate()+n); return x; }
+const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
 export default function HeatmapCalendar({
   levels,
@@ -20,12 +22,14 @@ export default function HeatmapCalendar({
   startOnSunday = true,
   currentStreak = 0,
   bestStreak = 0,
+  onPressDate,
 }: Props) {
+
   const today = useMemo(() => { const t = new Date(); t.setHours(0,0,0,0); return t; }, []);
 
-  // 주(열) × 요일(행) 그리드 생성
-  const columns = useMemo(() => {
-    const cols: { date: string; level: Level }[][] = [];
+  // 그리드 생성 + 월 라벨 포인트 수집
+  const { columns, monthTicks } = useMemo(() => {
+    const cols: { date: string; level: Level; month: number }[][] = [];
     const end = new Date(today);
     const weekday = end.getDay(); // 0=Sun
     const offset = startOnSunday ? weekday : (weekday === 0 ? 6 : weekday-1);
@@ -33,43 +37,79 @@ export default function HeatmapCalendar({
     const totalDays = weeks * 7;
     const startDate = addDays(end, -(totalDays-1) - offset);
 
+    const ticks: { x: number; month: number }[] = [];
+
     for (let w = 0; w < weeks; w++) {
-      const col: { date: string; level: Level }[] = [];
+      const col: { date: string; level: Level; month: number }[] = [];
       for (let r = 0; r < 7; r++) {
         const d = addDays(startDate, w*7 + r);
         const iso = toISO(d);
         const level = (levels[iso] ?? 0) as Level;
-        col.push({ date: iso, level });
+        const m = d.getMonth();
+        col.push({ date: iso, level, month: m });
+      }
+      // 각 주의 첫 칸(상단)이 새로운 달이면 라벨 찍기
+      const top = col[0];
+      const prevWeekTop = w > 0 ? cols[w-1][0] : null;
+      if (!prevWeekTop || prevWeekTop.month !== top.month) {
+        ticks.push({ x: w, month: top.month });
       }
       cols.push(col);
     }
-    return cols;
+    return { columns: cols, monthTicks: ticks };
   }, [today, weeks, startOnSunday, levels]);
 
-  // 색상 팔레트(원하면 바꿔도 됨)
   const color = (l: Level) => {
     switch (l) {
-      case 0: return '#e5e7eb'; // gray-200
-      case 1: return '#86efac'; // green-300
-      case 2: return '#4ade80'; // green-400
-      case 3: return '#22c55e'; // green-500
-      case 4: return '#16a34a'; // green-600
+      case 0: return '#e5e7eb';
+      case 1: return '#86efac';
+      case 2: return '#4ade80';
+      case 3: return '#22c55e';
+      case 4: return '#16a34a';
     }
   };
 
   return (
-    <View style={{ gap: 10 }}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingVertical: 8 }}>
+    <View style={{ gap: 8 }}>
+      {/* 월 라벨 */}
+      <View style={{ marginLeft: 24, flexDirection: 'row' }}>
+        {/* 빈 좌측 라벨 공간 24px 고려 */}
         <View style={{ flexDirection: 'row', gap: 4 }}>
+          {Array.from({ length: columns.length }).map((_, i) => {
+            const tick = monthTicks.find(t => t.x === i);
+            return (
+              <View key={i} style={{ width: 14, alignItems: 'center' }}>
+                {tick ? <Text style={{ fontSize: 10, color: '#6b7280' }}>{monthNames[tick.month]}</Text> : <Text style={{ fontSize: 10 }}> </Text>}
+              </View>
+            );
+          })}
+        </View>
+      </View>
+
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingVertical: 8 }}>
+        {/* 요일 라벨 (Sun/Tue/Thu만) */}
+        <View style={{ marginRight: 8, gap: 4, paddingTop: 14 /* 월라벨 높이 보정 */ }}>
+          {['Sun','Tue','Thu'].map((w, idx) => (
+            <View key={idx} style={{ height: 14* (idx===0 ? 1 : 2) }} />
+          ))}
+          {/* 실제 라벨 줄 */}
+          <View style={{ position:'absolute', top:14+ (14*0), height:14, justifyContent:'center' }}><Text style={{ fontSize:10, color:'#6b7280' }}>Sun</Text></View>
+          <View style={{ position:'absolute', top:14+ (14*2), height:14, justifyContent:'center' }}><Text style={{ fontSize:10, color:'#6b7280' }}>Tue</Text></View>
+          <View style={{ position:'absolute', top:14+ (14*4), height:14, justifyContent:'center' }}><Text style={{ fontSize:10, color:'#6b7280' }}>Thu</Text></View>
+        </View>
+
+        {/* 그리드 */}
+        <View style={{ flexDirection: 'row', gap: 4, paddingTop: 14 }}>
           {columns.map((col, i) => (
             <View key={i} style={{ gap: 4 }}>
-              {col.map((cell) => (
-                <View
+              {col.map((cell, r) => (
+                <Pressable
                   key={cell.date}
-                  accessibilityLabel={`${cell.date} level ${cell.level}`}
+                  onPress={() => onPressDate?.(cell.date)}
+                  android_ripple={{ color: '#00000022' }}
                   style={{
                     width: 14, height: 14, borderRadius: 3,
-                    backgroundColor: color(cell.level)
+                    backgroundColor: color(cell.level),
                   }}
                 />
               ))}

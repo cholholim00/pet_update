@@ -1,44 +1,37 @@
-import { useEffect, useRef } from 'react';
-import { View, StyleSheet, Modal } from 'react-native';
-import LottieView from 'lottie-react-native';
+// components/LevelUpBurst.tsx
+import React, { useEffect, useRef } from 'react';
+import { View, Modal, Platform, Text } from 'react-native';
 
-type Props = {
-  visible: boolean;
-  onDone?: () => void;
-};
+let LottieView: any = null;
+if (Platform.OS !== 'web') {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  LottieView = require('lottie-react-native').default;
+}
 
-export default function LevelUpBurst({ visible, onDone }: Props) {
-  const ref = useRef<LottieView>(null);
-
-  useEffect(() => {
-    if (visible) {
-      ref.current?.play(0, 120); // 애니 길이에 맞게 조절
-      // 안전장치: 2.0초 후 자동 닫기 (JSON에 따라 조정)
-      const t = setTimeout(() => onDone?.(), 2000);
-      return () => clearTimeout(t);
-    }
-  }, [visible]);
+export default function LevelUpBurst({ visible, onDone }: { visible: boolean; onDone: ()=>void }) {
+  const ref = useRef<any>(null);
+  useEffect(() => { if (visible && ref.current?.play) ref.current.play(); }, [visible]);
+  if (!visible) return null;
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onDone}>
-      <View style={styles.backdrop}>
-        <LottieView
-          ref={ref}
-          source={require('../assets/anim/level-up.json')}
-          autoPlay
-          loop={false}
-          style={{ width: 300, height: 300 }}
-        />
+      <View style={{ flex:1, alignItems:'center', justifyContent:'center', backgroundColor:'rgba(0,0,0,0.4)' }}>
+        {LottieView ? (
+          <LottieView
+            ref={ref}
+            // ✅ 경로 수정: assets/anim
+            source={require('../assets/animations/pet_growth.json')}
+            autoPlay
+            loop={false}
+            onAnimationFinish={onDone}
+            style={{ width: 280, height: 280 }}
+          />
+        ) : (
+          <View style={{ backgroundColor: 'white', padding: 16, borderRadius: 12 }}>
+            <Text style={{ fontSize: 20, fontWeight: '700' }}>✨ Level Up!</Text>
+          </View>
+        )}
       </View>
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
