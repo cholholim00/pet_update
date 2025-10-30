@@ -5,14 +5,14 @@ import { usePetStore } from '../store/usePet';
 import { computeJournalRewards, getToday, calcStreak } from '../lib/journal';
 import { saveJournalEntry, loadDates } from '../lib/storage';
 
-const PROMPTS = ['gratitude','reflect','plan','free'] as const;
+const PROMPTS = ['우울','위로','자유','기쁨','행복'] as const;
 type PromptKey = typeof PROMPTS[number];
 
 export default function Journal(){
   const router = useRouter();
   const { lastEntry, mood, setMood, setLastEntry, applyRewards, dates, setDates } = usePetStore();
   const [text, setText] = useState('');
-  const [sel, setSel] = useState<PromptKey[]>(['gratitude','plan']);
+  const [sel, setSel] = useState<PromptKey[]>([]);
 
   const today = useMemo(()=>getToday(),[]);
   const textLen = text.trim().length;
@@ -73,7 +73,7 @@ export default function Journal(){
 
       <View style={{ borderWidth:1, borderRadius:12, padding:12, minHeight:160 }}>
         <TextInput
-          placeholder="오늘 하루를 편하게 적어봐요..."
+          placeholder="오늘 하루의 감정들을 편하게 적어봐요..."
           multiline
           value={text}
           onChangeText={setText}
