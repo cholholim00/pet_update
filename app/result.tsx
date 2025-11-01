@@ -41,7 +41,7 @@ useEffect(() => {
         {LottieView ? (
           <LottieView
             // ✅ 경로 수정: assets/anim
-            source={require('../assets/animations/pet_growth.json')}
+            source={require('../assets/anim/pet_growth.json')}
             autoPlay
             loop={false}
           />
@@ -52,20 +52,28 @@ useEffect(() => {
 
       <Text style={{ fontSize: 18, marginTop: 10 }}>+{xp} XP 획득!</Text>
       <Text style={{ color: '#6b7280', marginBottom: 16 }}>현재 레벨: Lv.{petLevel}</Text>
-      <View style={{ flexDirection: 'row', gap: 12 }}>
-        <Pressable
-          onPress={() => router.push('/')}
-          style={{ backgroundColor: '#1e3a8a', padding: 12, borderRadius: 10, flex: 1 }}
-        >
-          <Text style={{ color: 'white', textAlign: 'center', fontWeight: '700' }}>🏠 홈으로</Text>
-        </Pressable>
-        <Pressable
-          onPress={() => router.push('/heatmap')}
-          style={{ backgroundColor: '#047857', padding: 12, borderRadius: 10, flex: 1 }}
-        >
-          <Text style={{ color: 'white', textAlign: 'center', fontWeight: '700' }}>🔥 히트맵 보기</Text>
-        </Pressable>
-      </View>
+     <View style={{ flexDirection: 'row', gap: 12, marginTop: 12 }}>
+  <Pressable
+    onPress={() => router.push('/')}
+    style={{ backgroundColor: '#1e3a8a', padding: 12, borderRadius: 10, flex: 1 }}
+  >
+    <Text style={{ color: 'white', textAlign: 'center', fontWeight: '700' }}>🏠 홈으로</Text>
+  </Pressable>
+  <Pressable
+    onPress={() => router.push('/heatmap')}
+    style={{ backgroundColor: '#047857', padding: 12, borderRadius: 10, flex: 1 }}
+  >
+    <Text style={{ color: 'white', textAlign: 'center', fontWeight: '700' }}>🔥 히트맵 보기</Text>
+  </Pressable>
+  <Pressable
+    onPress={() => router.push('/emotion')}
+    style={{ backgroundColor: '#f59e0b', padding: 12, borderRadius: 10, flex: 1 }}
+  >
+    <Text style={{ color: 'white', textAlign: 'center', fontWeight: '700' }}>
+      🌙 오늘의 힐링 추천
+    </Text>
+  </Pressable>
+</View>
 
       <LevelUpBurst visible={showLevelUp} onDone={() => setShowLevelUp(false)} />
     </View>

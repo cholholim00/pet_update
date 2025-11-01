@@ -20,7 +20,7 @@ export default function LevelUpBurst({ visible, onDone }: { visible: boolean; on
           <LottieView
             ref={ref}
             // ✅ 경로 수정: assets/anim
-            source={require('../assets/animations/pet_growth.json')}
+            source={require('../assets/anim/pet_growth.json')}
             autoPlay
             loop={false}
             onAnimationFinish={onDone}
