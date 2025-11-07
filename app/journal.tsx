@@ -6,7 +6,7 @@ import { computeJournalRewards, getToday, calcStreak } from '../lib/journal';
 import { saveJournalEntry, loadDates } from '../lib/storage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const PROMPTS = ['우울','위로','자유','기쁨','행복'] as const;
+const PROMPTS = ['우울','외로움','불안','스트레스','피곤','평온','희망','감사','행복','설렘'] as const;
 type PromptKey = typeof PROMPTS[number];
 const MIN_LEN = 10; // 최소 글자수(원하면 조정)
 
