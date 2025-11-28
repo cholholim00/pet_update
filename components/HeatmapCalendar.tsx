@@ -88,15 +88,7 @@ export default function HeatmapCalendar({
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingVertical: 8 }}>
         {/* 요일 라벨 (Sun/Tue/Thu만) */}
-        <View style={{ marginRight: 8, gap: 4, paddingTop: 14 /* 월라벨 높이 보정 */ }}>
-          {['Sun','Tue','Thu'].map((w, idx) => (
-            <View key={idx} style={{ height: 14* (idx===0 ? 1 : 2) }} />
-          ))}
-          {/* 실제 라벨 줄 */}
-          <View style={{ position:'absolute', top:14+ (14*0), height:14, justifyContent:'center' }}><Text style={{ fontSize:10, color:'#6b7280' }}>Sun</Text></View>
-          <View style={{ position:'absolute', top:14+ (14*2), height:14, justifyContent:'center' }}><Text style={{ fontSize:10, color:'#6b7280' }}>Tue</Text></View>
-          <View style={{ position:'absolute', top:14+ (14*4), height:14, justifyContent:'center' }}><Text style={{ fontSize:10, color:'#6b7280' }}>Thu</Text></View>
-        </View>
+       
 
         {/* 그리드 */}
         <View style={{ flexDirection: 'row', gap: 4, paddingTop: 14 }}>

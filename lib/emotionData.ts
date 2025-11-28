@@ -64,15 +64,15 @@ export const EmotionBg: Record<EmotionKey, any> = {
 // ✅ 감정 → 펫 Lottie (없는 감정은 근사치로 fallback)
 export const EmotionPetAnim: Partial<Record<EmotionKey, any>> = {
   sad:       require('../assets/anim/pet_sad.json'),
-  lonely:    require('../assets/anim/pet_sad.json'),
-  anxious:   require('../assets/anim/pet_calm.json'),
-  stressed:  require('../assets/anim/pet_tired.json'),
+  lonely:    require('../assets/anim/pet_lonely.json'),
+  anxious:   require('../assets/anim/pet_anxious.json'),
+  stressed:  require('../assets/anim/pet_stressed.json'),
   tired:     require('../assets/anim/pet_tired.json'),
   calm:      require('../assets/anim/pet_calm.json'),
-  hopeful:   require('../assets/anim/pet_happy.json'),
-  grateful:  require('../assets/anim/pet_calm.json'),
+  hopeful:   require('../assets/anim/pet_hopeful.json'),
+  grateful:  require('../assets/anim/pet_grateful.json'),
   happy:     require('../assets/anim/pet_happy.json'),
-  excited:   require('../assets/anim/pet_happy.json'),
+  excited:   require('../assets/anim/pet_excited.json'),
 };
 
 // ✅ 규칙 기반 감정 분류

@@ -1,6 +1,6 @@
 // app/emotion.tsx
 import React, { useMemo } from 'react';
-import { View, Text, ImageBackground, Pressable, Platform } from 'react-native';
+import { View, Text, Image, ImageBackground, Pressable, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -12,7 +12,7 @@ import { useBgm } from '../hooks/useBgm';
 let LottieView: any = null;
 if (Platform.OS !== 'web') {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  LottieView = require('lottie-react-native').default;
+  try {LottieView = require('lottie-react-native').default; } catch (e) { LottieView = null; }
 }
 
 export default function EmotionScreen() {
@@ -76,22 +76,20 @@ export default function EmotionScreen() {
         </View>
 
         {/* 펫 리액션 */}
-        <View style={{ alignItems: 'center', marginTop: 40 }}>
-          {LottieView && EmotionPetAnim[emotion] ? (
-            <LottieView source={EmotionPetAnim[emotion]} autoPlay loop style={{ width: 200, height: 200 }} />
-          ) : (
-            <View
-              style={{
-                backgroundColor: 'rgba(0,0,0,0.35)',
-                paddingVertical: 10,
-                paddingHorizontal: 14,
-                borderRadius: 12,
-              }}
-            >
-              <Text style={{ color: 'white', fontWeight: '800' }}>🐾 {emotion}</Text>
-            </View>
-          )}
-        </View>
+       <View style={{ alignItems: 'center', marginTop: 40 }}>
+  {LottieView && EmotionPetAnim[emotion] ? (
+    <LottieView
+      source={EmotionPetAnim[emotion]}
+      autoPlay
+      loop
+      style={{ width: 200, height: 200 }}
+    />
+  ) : (
+    <View style={{ backgroundColor: 'rgba(0,0,0,0.35)', paddingVertical: 10, paddingHorizontal: 14, borderRadius: 12 }}>
+      <Text style={{ color: 'white', fontWeight: '800' }}>🐾 {emotion}</Text>
+    </View>
+  )}
+</View>
 
         {/* 힐링 문구 */}
         <View

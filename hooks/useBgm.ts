@@ -17,17 +17,20 @@ async function ensureAudioMode() {
   });
   modeSet = true;
 }
-
 export function useBgm(emotion: EmotionKey, enabled = true, volume = 0.6) {
   const soundRef = useRef<Audio.Sound | null>(null);
+  
+ useEffect(() => {
+    // 🔹 BGM 파일이 없으면 그냥 아무 것도 안 함
+    if (!EmotionBgm[emotion] || !enabled) {
+      return;
+    }
 
-  useEffect(() => {
     let active = true;
 
     (async () => {
       await ensureAudioMode();
 
-      // 기존 사운드 정리
       if (soundRef.current) {
         try {
           await soundRef.current.stopAsync();
@@ -36,14 +39,10 @@ export function useBgm(emotion: EmotionKey, enabled = true, volume = 0.6) {
         soundRef.current = null;
       }
 
-      // 꺼져있으면 skip
-      if (!enabled) return;
-
-      // 새 사운드 로드
       try {
         const s = new Audio.Sound();
         soundRef.current = s;
-        await s.loadAsync(EmotionBgm[emotion], {
+        await s.loadAsync(EmotionBgm[emotion] as any, {
           shouldPlay: true,
           isLooping: true,
           volume,
@@ -53,9 +52,7 @@ export function useBgm(emotion: EmotionKey, enabled = true, volume = 0.6) {
       }
     })();
 
-    // 언마운트 시 정리
     return () => {
-      active = false;
       (async () => {
         if (soundRef.current) {
           try {
@@ -66,5 +63,5 @@ export function useBgm(emotion: EmotionKey, enabled = true, volume = 0.6) {
         }
       })();
     };
-  }, [emotion, enabled]);
+  }, [emotion, enabled, volume]);
 }
